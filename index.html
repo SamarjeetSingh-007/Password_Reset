@@ -114,6 +114,8 @@
         }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 </head>
 <body>
     <div class="container">
@@ -179,17 +181,15 @@
         </div>
     </div>
     <script>
+        // Supabase config
+        const SUPABASE_URL = 'https://jmrooprucgfcxxphgilm.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imptcm9vcHJ1Y2dmY3h4cGhnaWxtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEyMTU1ODAsImV4cCI6MjA2Njc5MTU4MH0.0Su10GTzTce2-f5iBR45gp3vVTun_g1YgU6q6XMvuK0';
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
         // Get URL parameters
         const urlParams = new URLSearchParams(window.location.search);
-        const accessToken = urlParams.get('access_token');
-        const refreshToken = urlParams.get('refresh_token');
-        const type = urlParams.get('type');
-
-        // Check if we have the required tokens
-        if (!accessToken || !refreshToken) {
-            showMessage('Invalid or expired password reset link. Please request a new password reset.', 'error');
-            document.getElementById('passwordForm').style.display = 'none';
-        }
+        const code = urlParams.get('code');
+        let session = null;
 
         // Password strength calculation
         function calculatePasswordStrength(password) {
@@ -292,6 +292,28 @@
             }
         }
 
+        // Exchange code for session on page load
+        async function handleCodeExchange() {
+            if (!code) {
+                showMessage('Invalid or expired password reset link. Please request a new password reset.', 'error');
+                document.getElementById('passwordForm').style.display = 'none';
+                return;
+            }
+            try {
+                const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+                if (error) {
+                    showMessage('Invalid or expired password reset link. Please request a new password reset.', 'error');
+                    document.getElementById('passwordForm').style.display = 'none';
+                } else {
+                    session = data.session;
+                    // Optionally, you can show a message: "You may now set a new password."
+                }
+            } catch (err) {
+                showMessage('Invalid or expired password reset link. Please request a new password reset.', 'error');
+                document.getElementById('passwordForm').style.display = 'none';
+            }
+        }
+
         document.getElementById('passwordForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             if (!validateForm()) {
@@ -305,7 +327,9 @@
             loading.style.display = 'block';
             hideMessage();
             try {
-                await updatePassword(newPassword);
+                // Use Supabase client to update password
+                const { error } = await supabase.auth.updateUser({ password: newPassword });
+                if (error) throw error;
                 showMessage('Password updated successfully! You can now log in with your new password.', 'success');
                 setTimeout(() => {
                     window.location.href = 'https://samarjeetsingh-007.github.io/Email_Confirmation/';
@@ -317,26 +341,6 @@
                 loading.style.display = 'none';
             }
         });
-
-        // Real password update function using Supabase API
-        async function updatePassword(newPassword) {
-            const apiKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imptcm9vcHJ1Y2dmY3h4cGhnaWxtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEyMTU1ODAsImV4cCI6MjA2Njc5MTU4MH0.0Su10GTzTce2-f5iBR45gp3vVTun_g1YgU6q6XMvuK0';
-            const response = await fetch('https://jmrooprucgfcxxphgilm.supabase.co/auth/v1/user', {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken}`,
-                    'apikey': apiKey
-                },
-                body: JSON.stringify({
-                    password: newPassword
-                })
-            });
-            if (!response.ok) {
-                throw new Error('Failed to update password');
-            }
-            return response.json();
-        }
 
         document.getElementById('newPassword').addEventListener('input', function() {
             const strength = calculatePasswordStrength(this.value);
@@ -350,6 +354,7 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('newPassword').focus();
+            handleCodeExchange();
         });
     </script>
 </body>
