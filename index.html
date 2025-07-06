@@ -181,10 +181,11 @@
         </div>
     </div>
     <script>
+    document.addEventListener('DOMContentLoaded', function() {
         // Supabase config
         const SUPABASE_URL = 'https://jmrooprucgfcxxphgilm.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imptcm9vcHJ1Y2dmY3h4cGhnaWxtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEyMTU1ODAsImV4cCI6MjA2Njc5MTU4MH0.0Su10GTzTce2-f5iBR45gp3vVTun_g1YgU6q6XMvuK0';
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // Get URL parameters
         const urlParams = new URLSearchParams(window.location.search);
@@ -249,7 +250,7 @@
             }
         }
 
-        function togglePassword(inputId) {
+        window.togglePassword = function(inputId) {
             const input = document.getElementById(inputId);
             const icon = input.nextElementSibling;
             if (input.type === 'password') {
@@ -300,7 +301,7 @@
                 return;
             }
             try {
-                const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+                const { data, error } = await supabaseClient.auth.exchangeCodeForSession(code);
                 if (error) {
                     showMessage('Invalid or expired password reset link. Please request a new password reset.', 'error');
                     document.getElementById('passwordForm').style.display = 'none';
@@ -328,7 +329,7 @@
             hideMessage();
             try {
                 // Use Supabase client to update password
-                const { error } = await supabase.auth.updateUser({ password: newPassword });
+                const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
                 if (error) throw error;
                 showMessage('Password updated successfully! You can now log in with your new password.', 'success');
                 setTimeout(() => {
@@ -352,10 +353,9 @@
             validateForm();
         });
 
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('newPassword').focus();
-            handleCodeExchange();
-        });
+        document.getElementById('newPassword').focus();
+        handleCodeExchange();
+    });
     </script>
 </body>
 </html>
