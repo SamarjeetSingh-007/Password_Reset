@@ -57,55 +57,33 @@
         }
         .eye-icon:hover { color: #667eea; }
         .password-strength { margin-top: 8px; }
-        .strength-meter {
-            height: 6px; background: #e1e5e9; border-radius: 3px;
-            overflow: hidden; margin-bottom: 5px;
-        }
+        .strength-meter { height: 6px; background: #e1e5e9; border-radius: 3px; overflow: hidden; margin-bottom: 5px; }
         .strength-fill { height: 100%; width: 0%; transition: all 0.3s ease; border-radius: 3px; }
         .strength-fill.weak { background: #dc3545; width: 25%; }
         .strength-fill.medium { background: #ffc107; width: 50%; }
         .strength-fill.good { background: #17a2b8; width: 75%; }
         .strength-fill.strong { background: #28a745; width: 100%; }
         .strength-text { font-size: 12px; color: #666; }
-        .requirements {
-            margin-top: 15px; padding: 15px; background: #f8f9fa;
-            border-radius: 8px; border-left: 4px solid #667eea;
-        }
+        .requirements { margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #667eea; }
         .requirements h4 { color: #333; font-size: 14px; margin-bottom: 8px; }
-        .requirement {
-            display: flex; align-items: center; margin-bottom: 5px;
-            font-size: 12px; color: #666;
-        }
+        .requirement { display: flex; align-items: center; margin-bottom: 5px; font-size: 12px; color: #666; }
         .requirement i { margin-right: 8px; font-size: 10px; }
         .requirement.met { color: #28a745; }
         .requirement.met i { color: #28a745; }
         .btn {
             width: 100%; padding: 15px; border: none; border-radius: 12px;
-            font-size: 16px; font-weight: 600; cursor: pointer;
-            transition: all 0.3s ease; margin-top: 20px;
+            font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; margin-top: 20px;
         }
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
-        }
-        .btn-primary:disabled {
-            background: #ccc; cursor: not-allowed; transform: none; box-shadow: none;
-        }
-        .message {
-            padding: 15px; border-radius: 8px; margin-top: 20px;
-            font-size: 14px; text-align: center;
-        }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3); }
+        .btn-primary:disabled { background: #ccc; cursor: not-allowed; transform: none; box-shadow: none; }
+        .message { padding: 15px; border-radius: 8px; margin-top: 20px; font-size: 14px; text-align: center; }
         .message.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .message.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
         .loading { display: none; text-align: center; margin-top: 20px; }
         .spinner {
-            border: 3px solid #f3f3f3; border-top: 3px solid #667eea;
-            border-radius: 50%; width: 30px; height: 30px;
-            animation: spin 1s linear infinite; margin: 0 auto;
+            border: 3px solid #f3f3f3; border-top: 3px solid #667eea; border-radius: 50%;
+            width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 0 auto;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @media (max-width: 480px) {
@@ -114,8 +92,6 @@
         }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <!-- Supabase JS -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 </head>
 <body>
     <div class="container">
@@ -181,17 +157,14 @@
         </div>
     </div>
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Supabase config
-        const SUPABASE_URL = 'https://jmrooprucgfcxxphgilm.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imptcm9vcHJ1Y2dmY3h4cGhnaWxtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEyMTU1ODAsImV4cCI6MjA2Njc5MTU4MH0.0Su10GTzTce2-f5iBR45gp3vVTun_g1YgU6q6XMvuK0';
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-        // Get URL parameters
+        // Get URL parameters (support both 'code' and 'token')
         const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get('code');
-        let session = null;
-
+        const code = urlParams.get('code') || urlParams.get('token');
+        // Hide form if no code/token
+        if (!code) {
+            showMessage('Invalid or expired password reset link. Please request a new password reset.', 'error');
+            document.getElementById('passwordForm').style.display = 'none';
+        }
         // Password strength calculation
         function calculatePasswordStrength(password) {
             let strength = 0;
@@ -210,7 +183,6 @@
             updateRequirements(requirements);
             return Math.min(strength, 100);
         }
-
         function updateRequirements(requirements) {
             const reqElements = {
                 length: document.getElementById('reqLength'),
@@ -230,7 +202,6 @@
                 }
             }
         }
-
         function updateStrengthMeter(strength) {
             const fill = document.getElementById('strengthFill');
             const text = document.getElementById('strengthText');
@@ -249,8 +220,7 @@
                 text.textContent = 'Strong';
             }
         }
-
-        window.togglePassword = function(inputId) {
+        function togglePassword(inputId) {
             const input = document.getElementById(inputId);
             const icon = input.nextElementSibling;
             if (input.type === 'password') {
@@ -261,66 +231,33 @@
                 icon.className = 'fas fa-eye eye-icon';
             }
         }
-
         function showMessage(text, type) {
             const message = document.getElementById('message');
             message.textContent = text;
             message.className = `message ${type}`;
             message.style.display = 'block';
         }
-
         function hideMessage() {
             document.getElementById('message').style.display = 'none';
         }
-
         function validateForm() {
             const newPassword = document.getElementById('newPassword').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
-            const submitBtn = document.getElementById('submitBtn');
-            // Enable button only if all requirements are met and passwords match
-            const strength = calculatePasswordStrength(newPassword);
-            if (
-                newPassword === confirmPassword &&
-                strength >= 75 &&
-                newPassword.length > 0
-            ) {
-                submitBtn.disabled = false;
-                hideMessage();
-                return true;
-            } else {
-                submitBtn.disabled = true;
+            if (newPassword !== confirmPassword) {
+                showMessage('Passwords do not match.', 'error');
                 return false;
             }
-        }
-
-        // Exchange code for session on page load
-        async function handleCodeExchange() {
-            if (!code) {
-                showMessage('Invalid or expired password reset link. Please request a new password reset.', 'error');
-                document.getElementById('passwordForm').style.display = 'none';
-                return;
+            const strength = calculatePasswordStrength(newPassword);
+            if (strength < 75) {
+                showMessage('Password is too weak. Please choose a stronger password.', 'error');
+                return false;
             }
-            try {
-                const { data, error } = await supabaseClient.auth.exchangeCodeForSession(code);
-                if (error) {
-                    showMessage('Invalid or expired password reset link. Please request a new password reset.', 'error');
-                    document.getElementById('passwordForm').style.display = 'none';
-                } else {
-                    session = data.session;
-                    // Optionally, you can show a message: "You may now set a new password."
-                }
-            } catch (err) {
-                showMessage('Invalid or expired password reset link. Please request a new password reset.', 'error');
-                document.getElementById('passwordForm').style.display = 'none';
-            }
+            hideMessage();
+            return true;
         }
-
         document.getElementById('passwordForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            if (!validateForm()) {
-                showMessage('Please ensure all requirements are met and passwords match.', 'error');
-                return;
-            }
+            if (!validateForm()) return;
             const newPassword = document.getElementById('newPassword').value;
             const submitBtn = document.getElementById('submitBtn');
             const loading = document.getElementById('loading');
@@ -328,34 +265,64 @@
             loading.style.display = 'block';
             hideMessage();
             try {
-                // Use Supabase client to update password
-                const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
-                if (error) throw error;
+                // Step 1: Exchange code/token for a session (Supabase verify endpoint)
+                const verifyRes = await fetch('https://jmrooprucgfcxxphgilm.supabase.co/auth/v1/verify', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imptcm9vcHJ1Y2dmY3h4cGhnaWxtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE4MTkyMTUsImV4cCI6MjA2NzM5NTIxNX0.Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8'
+                    },
+                    body: JSON.stringify({
+                        type: 'recovery',
+                        token: code
+                    })
+                });
+                const verifyData = await verifyRes.json();
+                if (!verifyRes.ok || !verifyData.access_token) {
+                    throw new Error(verifyData.error_description || verifyData.msg || 'Invalid or expired password reset link. Please request a new password reset.');
+                }
+                const accessToken = verifyData.access_token;
+                // Step 2: Update password using the new access token
+                await updatePassword(newPassword, accessToken);
                 showMessage('Password updated successfully! You can now log in with your new password.', 'success');
                 setTimeout(() => {
-                    window.location.href = 'https://samarjeetsingh-007.github.io/Email_Confirmation/';
+                    window.location.href = 'https://jmrooprucgfcxxphgilm.supabase.co/auth/v1/authorize?provider=email';
                 }, 3000);
             } catch (error) {
-                showMessage('Failed to update password. Please try again.', 'error');
+                console.error('Password update error:', error);
+                showMessage('Failed to update password: ' + error.message, 'error');
             } finally {
                 submitBtn.disabled = false;
                 loading.style.display = 'none';
             }
         });
-
+        async function updatePassword(newPassword, accessToken) {
+            const response = await fetch('https://jmrooprucgfcxxphgilm.supabase.co/auth/v1/user', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`,
+                    'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imptcm9vcHJ1Y2dmY3h4cGhnaWxtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE4MTkyMTUsImV4cCI6MjA2NzM5NTIxNX0.Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8'
+                },
+                body: JSON.stringify({ password: newPassword })
+            });
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error_description || errorData.message || 'Failed to update password');
+            }
+            return response.json();
+        }
         document.getElementById('newPassword').addEventListener('input', function() {
             const strength = calculatePasswordStrength(this.value);
             updateStrengthMeter(strength);
             validateForm();
         });
-
         document.getElementById('confirmPassword').addEventListener('input', function() {
             validateForm();
         });
-
-        document.getElementById('newPassword').focus();
-        handleCodeExchange();
-    });
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('newPassword').focus();
+        });
     </script>
 </body>
 </html>
