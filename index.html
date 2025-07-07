@@ -243,16 +243,25 @@
         function validateForm() {
             const newPassword = document.getElementById('newPassword').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
-            if (newPassword !== confirmPassword) {
+            const submitBtn = document.getElementById('submitBtn');
+
+            // Check if passwords match and are not empty
+            if (newPassword !== confirmPassword || newPassword === "") {
                 showMessage('Passwords do not match.', 'error');
+                submitBtn.disabled = true;
                 return false;
             }
+
+            // Check password strength
             const strength = calculatePasswordStrength(newPassword);
             if (strength < 75) {
                 showMessage('Password is too weak. Please choose a stronger password.', 'error');
+                submitBtn.disabled = true;
                 return false;
             }
+
             hideMessage();
+            submitBtn.disabled = false;
             return true;
         }
         document.getElementById('passwordForm').addEventListener('submit', async function(e) {
